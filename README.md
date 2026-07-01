@@ -25,14 +25,15 @@ target\release\screen_locker.exe
 
 The bind is polled without reserving the key, so it still reaches Windows and the foreground app. Single-key binds are allowed, but they will lock or unlock the cursor whenever that key is pressed.
 
-Default bind:
+Default lock/unlock key:
 
-- Lock/unlock: `Ctrl+Alt+L`
-- Emergency unlock: `Ctrl+Alt+Esc` when Windows allows the app to register it.
+`Ctrl+Alt+L`
 
-`Ctrl+Alt+Esc` is the only reserved Windows hotkey. If another app owns it, Simple Cursor Locker refuses to lock unless the lock/unlock bind is active.
+Emergency unlock:
 
-Use the lock/unlock bind or emergency unlock before interacting outside the locked monitor.
+`Ctrl+Alt+Esc` when Windows allows the app to register it. This is the only reserved Windows hotkey. If another app owns it, Simple Cursor Locker refuses to lock unless the lock/unlock key is active.
+
+Use the lock/unlock key or emergency unlock before interacting outside the locked monitor.
 
 Settings are saved to:
 
