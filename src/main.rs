@@ -183,20 +183,11 @@ mod win_app {
         }
     }
 
+    #[derive(Default)]
     struct Settings {
         selected_monitor: usize,
-        toggle_hotkey: Hotkey,
+        toggle_hotkey: Option<Hotkey>,
         load_warnings: Vec<String>,
-    }
-
-    impl Default for Settings {
-        fn default() -> Self {
-            Self {
-                selected_monitor: 0,
-                toggle_hotkey: Hotkey::new(MOD_CONTROL | MOD_ALT, b'L' as u32),
-                load_warnings: Vec::new(),
-            }
-        }
     }
 
     impl Settings {
@@ -227,7 +218,7 @@ mod win_app {
                     }
                     "toggle_hotkey" => {
                         if let Some(hotkey) = parse_hotkey(value) {
-                            settings.toggle_hotkey = hotkey;
+                            settings.toggle_hotkey = Some(hotkey);
                         } else {
                             settings.load_warnings.push("toggle_hotkey".to_string());
                         }
@@ -245,25 +236,28 @@ mod win_app {
                 fs::create_dir_all(parent)?;
             }
 
+            let hotkey = self
+                .toggle_hotkey
+                .map(|hotkey| hotkey.display())
+                .unwrap_or_default();
             let contents = format!(
                 "# screen_locker settings\nselected_monitor={}\ntoggle_hotkey={}\n",
-                self.selected_monitor,
-                self.toggle_hotkey.display()
+                self.selected_monitor, hotkey
             );
             fs::write(&path, contents)?;
             Ok(path)
         }
 
-        fn hotkey(&self, action: Action) -> Hotkey {
+        fn hotkey(&self, action: Action) -> Option<Hotkey> {
             match action {
                 Action::Toggle => self.toggle_hotkey,
-                Action::Unlock => Hotkey::new(MOD_CONTROL | MOD_ALT, VK_ESCAPE),
+                Action::Unlock => Some(Hotkey::new(MOD_CONTROL | MOD_ALT, VK_ESCAPE)),
             }
         }
 
         fn set_hotkey(&mut self, action: Action, hotkey: Hotkey) {
             if action == Action::Toggle {
-                self.toggle_hotkey = hotkey;
+                self.toggle_hotkey = Some(hotkey);
             }
         }
     }
@@ -522,8 +516,7 @@ mod win_app {
                 if !self.has_unlock_path() {
                     self.locked = false;
                     self.status =
-                        "Cannot lock: no registered unlock path. Enable Toggle/Unlock or free Ctrl+Alt+Esc."
-                            .to_string();
+                        "Cannot lock: set a lock/unlock key or free Ctrl+Alt+Esc.".to_string();
                     return;
                 }
 
@@ -586,7 +579,8 @@ mod win_app {
 
         fn has_unlock_path(&self) -> bool {
             self.emergency_unlock_registered
-                || self.registered_actions.contains(&Action::Toggle)
+                || (self.registered_actions.contains(&Action::Toggle)
+                    && self.settings.hotkey(Action::Toggle).is_some())
                 || self.registered_actions.contains(&Action::Unlock)
         }
 
@@ -641,7 +635,10 @@ mod win_app {
         fn complete_capture(&mut self, ctx: &egui::Context, action: Action, hotkey: Hotkey) {
             self.settings.set_hotkey(action, hotkey);
             self.capturing = None;
-            self.toggle_bind_down = hotkey_is_down(self.settings.hotkey(Action::Toggle));
+            self.toggle_bind_down = self
+                .settings
+                .hotkey(Action::Toggle)
+                .is_some_and(hotkey_is_down);
             self.mark_settings_dirty();
             self.restart_hotkeys(ctx);
             self.status = format!("{} bind set to {}", action.label(), hotkey.display());
@@ -728,7 +725,10 @@ mod win_app {
                 return;
             }
 
-            let down = hotkey_is_down(self.settings.hotkey(Action::Toggle));
+            let down = self
+                .settings
+                .hotkey(Action::Toggle)
+                .is_some_and(hotkey_is_down);
             if down && !self.toggle_bind_down {
                 self.apply_action(Action::Toggle);
             }
@@ -883,7 +883,10 @@ mod win_app {
                     let text = if recording {
                         "Recording".to_string()
                     } else {
-                        self.settings.hotkey(action).display()
+                        self.settings
+                            .hotkey(action)
+                            .map(|hotkey| hotkey.display())
+                            .unwrap_or_else(|| "Set key".to_string())
                     };
                     let fill = if recording {
                         Color32::from_rgb(139, 98, 42)

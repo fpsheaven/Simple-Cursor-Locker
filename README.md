@@ -20,18 +20,14 @@ target\release\screen_locker.exe
 
 1. Open `target\release\screen_locker.exe`.
 2. Pick a monitor from the layout.
-3. Press the configured bind to lock or unlock the cursor.
-4. Click the bind button if you want to record a different key or shortcut.
+3. Click `Set key` and press the key or shortcut you want to use.
+4. Press that key to lock or unlock the cursor.
 
 The bind is polled without reserving the key, so it still reaches Windows and the foreground app. Single-key binds are allowed, but they will lock or unlock the cursor whenever that key is pressed.
 
-Default lock/unlock key:
-
-`Ctrl+Alt+L`
-
 Emergency unlock:
 
-`Ctrl+Alt+Esc` when Windows allows the app to register it. This is the only reserved Windows hotkey. If another app owns it, Simple Cursor Locker refuses to lock unless the lock/unlock key is active.
+`Ctrl+Alt+Esc` when Windows allows the app to register it. This is the only reserved Windows hotkey. If another app owns it, set a lock/unlock key before locking.
 
 Use the lock/unlock key or emergency unlock before interacting outside the locked monitor.
 
