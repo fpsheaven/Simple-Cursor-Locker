@@ -2,6 +2,8 @@
 
 A compact Windows Rust utility that detects your monitors and can confine the mouse cursor to one selected monitor. The UI is built with egui and the cursor lock/global binds use native Win32 calls.
 
+![Simple Cursor Locker screenshot](assets/screenshot.png)
+
 ## Build
 
 ```powershell
